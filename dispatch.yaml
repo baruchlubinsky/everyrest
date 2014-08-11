@@ -1,0 +1,5 @@
+application: everyrest
+
+dispatch:
+    - url: "*/*"
+      module: "default"
