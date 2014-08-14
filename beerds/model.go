@@ -7,12 +7,12 @@ import (
 
 type Model struct {
 	entity *datastore.PropertyList
-	key *datastore.Key
-	table *Table
+	key    *datastore.Key
+	table  *Table
 }
 
 func (model *Model) GetId() string {
-	return model.key.String()[len(model.table.EntityName()) + 2:]
+	return model.key.String()[len(model.table.EntityName())+2:]
 }
 
 func (model *Model) Attributes() map[string]interface{} {
@@ -35,21 +35,26 @@ func (model *Model) Attributes() map[string]interface{} {
 
 func (model *Model) SetAttributes(data map[string]interface{}) {
 	res := make(datastore.PropertyList, 0)
+	relations := make(map[string]interface{})
 	for _, property := range *model.entity {
 		field, found := data[toLower(property.Name)]
 		if found {
-			res = addProperty(res, property.Name, field)
+			if addProperty(&res, property.Name, field) || property.Multiple {
+				relations[property.Name] = true
+			}
 			delete(data, toLower(property.Name))
 		} else {
-			res = append(res, property)
+			if _, slice := relations[property.Name]; !slice {
+				res = append(res, property)
+			}
 		}
 	}
 	for key, value := range data {
-		res = addProperty(res, toUpper(key), value)
+		addProperty(&res, toUpper(key), value)
 	}
 	model.entity = &res
 }
-func (model *Model) Save() (error) {
+func (model *Model) Save() error {
 	key, err := datastore.Put(model.table.database.context, model.key, model.entity)
 	if err != nil {
 		return err
@@ -58,28 +63,29 @@ func (model *Model) Save() (error) {
 	return nil
 }
 
-func (model *Model) Delete() (error) {
+func (model *Model) Delete() error {
 	return datastore.Delete(model.table.database.context, model.key)
 }
 
-func addProperty(destination datastore.PropertyList, name string, field interface{}) datastore.PropertyList {
+func addProperty(destination *datastore.PropertyList, name string, field interface{}) bool {
 	t := reflect.TypeOf(field).Kind()
 	if t == reflect.Slice {
-		for _, elem := range(field.([]interface{})) {
-			destination = append(destination, datastore.Property{
-				Name: name,
-				Value: elem,
-				NoIndex: false,
+		for _, elem := range field.([]interface{}) {
+			*destination = append(*destination, datastore.Property{
+				Name:     name,
+				Value:    elem,
+				NoIndex:  false,
 				Multiple: true,
 			})
-		} 
+		}
+		return true
 	} else {
-		destination = append(destination, datastore.Property{
-			Name: name,
-			Value: field,
-			NoIndex: false,
+		*destination = append(*destination, datastore.Property{
+			Name:     name,
+			Value:    field,
+			NoIndex:  false,
 			Multiple: false,
 		})
+		return false
 	}
-	return destination
 }
