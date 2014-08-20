@@ -1,7 +1,7 @@
 EveryREST
 =========
 
-Use this program as a server for Ember Data. The server responds to all (WIP) requests from Ember Data as expected. All logic is handled by the Ember application.
+Use this program as a server for Ember Data with the [REST Adapter](http://emberjs.com/guides/models/the-rest-adapter/). The server responds to all (WIP) requests from Ember Data as expected. All logic is handled by the Ember application.
 
 Usage
 ==
