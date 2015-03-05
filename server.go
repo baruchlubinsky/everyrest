@@ -3,7 +3,6 @@ package main
 import (
 	"beerds"
 	"github.com/baruchlubinsky/beerapi/api"
-	"log"
 	"net/http"
 	"strings"
 )
