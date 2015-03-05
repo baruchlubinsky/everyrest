@@ -2,7 +2,6 @@ package beerds
 
 import (
 	"appengine/datastore"
-	"reflect"
 )
 
 type Model struct {
@@ -68,8 +67,8 @@ func (model *Model) Delete() error {
 }
 
 func addProperty(destination *datastore.PropertyList, name string, field interface{}) bool {
-	t := reflect.TypeOf(field).Kind()
-	if t == reflect.Slice {
+	switch field.(type) {
+	case []interface{}:
 		for _, elem := range field.([]interface{}) {
 			*destination = append(*destination, datastore.Property{
 				Name:     name,
@@ -79,7 +78,7 @@ func addProperty(destination *datastore.PropertyList, name string, field interfa
 			})
 		}
 		return true
-	} else {
+	default:
 		*destination = append(*destination, datastore.Property{
 			Name:     name,
 			Value:    field,
